@@ -1,0 +1,57 @@
+service: api-project-name
+
+# Create an optimized package for our functions
+package:
+  individually: true
+
+plugins:
+  - serverless-offline # Allow local development
+  - serverless-domain-manager # Create a domain for APIs
+  - serverless-bundle # Package our functions with Webpack
+
+provider:
+  name: aws
+  runtime: nodejs10.x
+  region: us-east-1
+  stage: dev
+  memorySize: 128
+  timeout: 5
+
+custom:
+  stage: ${opt:stage, self:provider.stage}
+  allowedHeaders:
+    - Accept
+    - Content-Type
+    - Content-Length
+    - Authorization
+    - X-Amz-Date
+    - X-Api-Key
+    - X-Amz-Security-Token
+    - X-Amz-User-Agent
+  customDomain:
+    domainName: ${opt:stage, self:provider.stage}-api-project-name.domain
+    basePath: "v1"
+    stage: ${opt:stage, self:provider.stage}
+    certificateName: "domain"
+    createRoute53Record: true
+
+functions:
+  helloWorld:
+    handler: lambda-hello-world/handler.helloWorld
+    events:
+      - http:
+          path: hello
+          method: get
+  helloWorldDynamo:
+    role: ${ssm:${self:custom.stage}-hello-dynamo-iam-role}
+    handler: lambda-hello-dynamo/handler.helloDynamo
+    environment:
+      DYNAMODB_HELLO: ${ssm:${self:custom.stage}-dynamodb-hello-table}
+    events:
+      - http:
+          path: data
+          method: get
+          cors: true
+          authorizer:
+            name: authorizer
+            arn: ${ssm:${self:custom.stage}-cognito-user-pool-arn}

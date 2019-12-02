@@ -1,0 +1,12 @@
+{
+  "name": "hello_world",
+  "version": "1.0.0",
+  "description": "Hello world sample for NodeJS",
+  "main": "handler.js",
+  "author": "Vinicius Carvalho",
+  "license": "MIT",
+  "dependencies": {},
+  "scripts": {
+    "test": "echo \"Error: Tests are executed by the serverless-bundle in the root folder\" && exit 1"
+  }
+}

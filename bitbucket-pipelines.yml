@@ -1,0 +1,251 @@
+image: atlassian/default-image:2
+
+definitions:
+  caches:
+    npm: $HOME/.npm
+    cypress: $HOME/.cache/Cypress
+
+pipelines:
+  branches:
+    dev:
+      - step:
+          name: Apply infrastucture on dev stage
+          script:
+            #
+            # Install Terraform -> dev
+            #
+            - echo Downloading Terraform executable
+            - mkdir -p ~/bin
+            - cd ~/bin
+            - export PATH="$PATH:/root/bin"
+            - wget https://releases.hashicorp.com/terraform/0.12.16/terraform_0.12.16_linux_amd64.zip
+            - echo Terraform was downloaded successfully.
+            - unzip terraform_0.12.16_linux_amd64.zip
+
+            #
+            # Provision Terraform resources
+            #
+            - cd ${BITBUCKET_CLONE_DIR}/terraform
+            - echo Initializing Terraform
+            - terraform init
+            - echo Selecting the correct workspace
+            - (terraform workspace new dev || true) && terraform workspace select dev
+
+            # Ensure Terraform syntax is valid before proceeding.
+            - echo Validating the template
+            - terraform validate -var-file=dev.tfvars
+            - echo Applying the template on the dev environment
+            # Ensure this step passes so that the state is always pushed.
+            - terraform apply -var-file=dev.tfvars -auto-approve || true
+            - terraform output
+      - step:
+          name: Install and Test
+          image: node:10.15.0
+          caches:
+            - npm
+            - cypress
+            - node
+          script:
+            # Install dependencies
+            - cd api/
+            - echo Installing Serverless Framework
+            - npm install -g serverless
+            - echo Installing NPM dependencies
+            - npm install
+            - echo Dependencies installed successfully
+            # Run unit tests
+            - echo "Installing dependencies for unit tests"
+            - for lambda in lambda-*; do cd $lambda && npm install && cd ..; done
+            - echo "Running unit tests"
+            - npm run test
+            - echo "Unit tests completed on `date`"
+          artifacts:
+            - api/**
+      - step:
+          name: Send SonarCloud Metrics
+          script:
+            - pipe: sonarsource/sonarcloud-scan:0.1.5
+              variables:
+                SONAR_TOKEN: ${SONAR_TOKEN}
+                EXTRA_ARGS: -Dsonar.projectKey="project-name-back-end" -Dsonar.organization="organization" -Dsonar.sources="./" -Dsonar.host.url="https://sonarcloud.io" -Dsonar.javascript.lcov.reportPaths="coverage/lcov.info" -Dsonar.test.inclusions="api/lambda-*/**/*.spec.js" -Dsonar.inclusions="api/lambda-*/*.js"
+          artifacts:
+            - api/**
+      - step:
+          image: mesosphere/aws-cli
+          name: Deploy to dev
+          deployment: test
+          script:
+            - echo Install NPM
+            - apk add --no-cache --repository http://dl-cdn.alpinelinux.org/alpine/v3.9/main/ npm=10.14.2-r0
+            - echo Installing Serverless Framework
+            - npm install -g serverless
+            - cd api/
+            - echo Cria o domínio da API
+            - sls create_domain
+            - echo Deploy the APIs
+            - sls deploy -v -s dev
+      - step:
+          image: cypress/base:10
+          name: Run integration tests on dev
+          caches:
+            - npm
+            - cypress
+            - node
+          script:
+            - cd api/
+            - echo Installing NPM dependencies
+            - npm install
+            - echo Dependencies installed successfully
+            # Run tests
+            - echo Executing integration tests on dev
+            - CYPRESS_baseUrl=https://dev-api-project-name.domain/v1 npm run e2e
+            - echo Tests executed successfully
+
+    master:
+      - step:
+          name: Apply infrastucture on stage stage
+          script:
+            #
+            # Install Terraform -> stage
+            #
+            - echo Downloading Terraform executable
+            - mkdir -p ~/bin
+            - cd ~/bin
+            - export PATH="$PATH:/root/bin"
+            - wget https://releases.hashicorp.com/terraform/0.12.16/terraform_0.12.16_linux_amd64.zip
+            - echo Terraform was downloaded successfully.
+            - unzip terraform_0.12.16_linux_amd64.zip
+
+            #
+            # Provision Terraform resources
+            #
+            - cd ${BITBUCKET_CLONE_DIR}/terraform
+            - echo Initializing Terraform
+            - terraform init
+            - echo Selecting the correct workspace
+            - (terraform workspace new stage || true) && terraform workspace select stage
+
+            # Ensure Terraform syntax is valid before proceeding.
+            - echo Validating the template
+            - terraform validate -var-file=stage.tfvars
+            - echo Applying the template on the stage environment
+            # Ensure this step passes so that the state is always pushed.
+            - terraform apply -var-file=stage.tfvars -auto-approve || true
+            - terraform output
+      - step:
+          name: Install and Test
+          image: node:10.15.0
+          caches:
+            - npm
+            - cypress
+            - node
+          script:
+            # Install dependencies
+            - cd api/
+            - echo Installing Serverless Framework
+            - npm install -g serverless
+            - echo Installing NPM dependencies
+            - npm install
+            - echo Dependencies installed successfully
+            - echo "Installing dependencies for unit tests"
+            - for lambda in lambda-*; do cd $lambda && npm install && cd ..; done
+            # Run unit tests
+            - echo "Running unit tests"
+            - for lambda in lambda-*; do cd $lambda && npm install-test && cd ..; done
+            - echo "Unit tests completed on `date`"
+          artifacts:
+            - api/**
+      - step:
+          image: mesosphere/aws-cli
+          name: Deploy to stage
+          deployment: staging
+          script:
+            - echo Install NPM
+            - apk add --no-cache --repository http://dl-cdn.alpinelinux.org/alpine/v3.9/main/ npm=10.14.2-r0
+            - echo Installing Serverless Framework
+            - npm install -g serverless
+            - cd api/
+            - echo Deploy the APIs
+            - sls deploy -v -s stage
+      - step:
+          image: cypress/base:10
+          name: Run integration tests on staging
+          caches:
+            - npm
+            - cypress
+            - node
+          script:
+            - cd api/
+            - echo Installing NPM dependencies
+            - npm install
+            - echo Dependencies installed successfully
+            # Run tests
+            - echo Executing integration tests on staging
+            - CYPRESS_baseUrl=https://stage-api-project-name.domain/v1 npm run e2e
+            - echo Tests executed successfully
+      - step:
+          name: Apply infrastucture on prod stage
+          trigger: manual
+          script:
+            #
+            # Install Terraform -> prod
+            #
+            - echo Downloading Terraform executable
+            - mkdir -p ~/bin
+            - cd ~/bin
+            - export PATH="$PATH:/root/bin"
+            - wget https://releases.hashicorp.com/terraform/0.12.16/terraform_0.12.16_linux_amd64.zip
+            - echo Terraform was downloaded successfully.
+            - unzip terraform_0.12.16_linux_amd64.zip
+
+            #
+            # Provision Terraform resources
+            #
+            - cd ${BITBUCKET_CLONE_DIR}/terraform
+            - echo Initializing Terraform
+            - terraform init
+            - echo Selecting the correct workspace
+            - (terraform workspace new prod || true) && terraform workspace select prod
+
+            # Ensure Terraform syntax is valid before proceeding.
+            - echo Validating the template
+            - terraform validate -var-file=prod.tfvars
+            - echo Applying the template on the prod environment
+            # Ensure this step passes so that the state is always pushed.
+            - terraform apply -var-file=prod.tfvars -auto-approve || true
+            - terraform output
+      - step:
+          image: mesosphere/aws-cli
+          name: Deploy to prod
+          deployment: production
+          caches:
+            - npm
+            - cypress
+            - node
+          script:
+            - echo Install NPM
+            - apk add --no-cache --repository http://dl-cdn.alpinelinux.org/alpine/v3.9/main/ npm=10.14.2-r0
+            - cd api/
+            - echo Installing Serverless Framework
+            - npm install -g serverless
+            - echo Installing NPM dependencies
+            - npm install
+            - echo Dependencies installed successfully
+            - echo Deploy the APIs
+            - sls deploy -v -s prod
+      - step:
+          image: cypress/base:10
+          name: Run integration tests on prod
+          caches:
+            - npm
+            - cypress
+            - node
+          script:
+            - cd api/
+            - echo Installing NPM dependencies
+            - npm install
+            - echo Dependencies installed successfully
+            # Run tests
+            - echo Executing integration tests on prod
+            - CYPRESS_baseUrl=https://prod-api-project-name.domain/v1 npm run e2e
+            - echo Tests executed successfully

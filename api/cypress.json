@@ -1,0 +1,5 @@
+{
+  "baseUrl": "https://dev-api-project-name.domain/v1",
+  "integrationFolder": "./",
+  "testFiles": "lambda-*/__tests__/e2e/*.cy.e2e.js"
+}

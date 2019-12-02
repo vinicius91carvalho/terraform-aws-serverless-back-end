@@ -1,0 +1,14 @@
+{
+  "name": "hello_dynamo",
+  "version": "1.0.0",
+  "description": "Lambda calling DynamoDB example",
+  "main": "handler.js",
+  "author": "Vinicius Carvalho",
+  "license": "MIT",
+  "dependencies": {
+    "aws-sdk": "^2.556.0"
+  },
+  "scripts": {
+    "test": "echo \"Error: Tests are executed by the serverless-bundle in the root folder\" && exit 1"
+  }
+}

@@ -1,0 +1,16 @@
+.DS_Store
+terraform.tfplan
+terraform.tfstate
+**/node_modules
+*.backup
+**/*.tfplan
+**/.terraform/
+**/*.tfstate
+*.log
+*.bak
+*~
+.*.swp
+.idea
+*.iml
+*.test
+*.iml

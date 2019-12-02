@@ -1,0 +1,10 @@
+# package directories
+node_modules
+coverage
+reports
+.scannerwork
+jspm_packages
+.nyc_output
+
+# Serverless directories
+.serverless

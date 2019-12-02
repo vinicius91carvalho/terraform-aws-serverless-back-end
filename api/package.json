@@ -1,0 +1,32 @@
+{
+  "name": "api",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "dependencies": {},
+  "devDependencies": {
+    "@babel/core": "^7.7.4",
+    "@babel/preset-env": "^7.7.4",
+    "@babel/register": "^7.7.4",
+    "chai": "^4.2.0",
+    "cypress": "^3.7.0",
+    "mocha": "^6.2.2",
+    "mocha-sonarqube-reporter": "^1.0.1",
+    "nyc": "^14.1.1",
+    "serverless-bundle": "^1.2.5",
+    "serverless-domain-manager": "^3.3.0",
+    "serverless-offline": "^5.12.0"
+  },
+  "scripts": {
+    "cy:verify": "cypress verify",
+    "cy:version": "cypress version",
+    "cy:run": "cypress run",
+    "cy:open": "cypress open",
+    "e2e": "cypress run",
+    "e2e:chrome": "cypress run --browser chrome",
+    "e2e:record": "cypress run --record",
+    "test": "nyc --silent --reporter=lcov --reporter=text-lcov mocha --require @babel/register \"./lambda-*/**/*.spec.js*\""
+  },
+  "author": "Vinicius Carvalho",
+  "license": "ISC"
+}
