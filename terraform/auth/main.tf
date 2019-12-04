@@ -38,7 +38,7 @@ resource "aws_cognito_user_group" "user_group" {
   name         = var.group_name
   user_pool_id = aws_cognito_user_pool.pool.id
   description  = "Managed by Terraform"
-  role_arn     = aws_iam_role.group_role.arn
+  role_arn     = aws_iam_role.cognito_group_role.arn
 }
 
 /*

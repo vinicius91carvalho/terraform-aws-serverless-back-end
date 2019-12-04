@@ -10,6 +10,7 @@ pipelines:
     dev:
       - step:
           name: Apply infrastucture on dev stage
+          image: mesosphere/aws-cli
           script:
             #
             # Install Terraform -> dev
@@ -18,6 +19,7 @@ pipelines:
             - mkdir -p ~/bin
             - cd ~/bin
             - export PATH="$PATH:/root/bin"
+            - apk add --update ca-certificates openssl && update-ca-certificates
             - wget https://releases.hashicorp.com/terraform/0.12.16/terraform_0.12.16_linux_amd64.zip
             - echo Terraform was downloaded successfully.
             - unzip terraform_0.12.16_linux_amd64.zip
@@ -103,7 +105,8 @@ pipelines:
 
     master:
       - step:
-          name: Apply infrastucture on stage stage
+          name: Apply infrastucture on stage
+          image: mesosphere/aws-cli
           script:
             #
             # Install Terraform -> stage
@@ -112,6 +115,7 @@ pipelines:
             - mkdir -p ~/bin
             - cd ~/bin
             - export PATH="$PATH:/root/bin"
+            - apk add --update ca-certificates openssl && update-ca-certificates
             - wget https://releases.hashicorp.com/terraform/0.12.16/terraform_0.12.16_linux_amd64.zip
             - echo Terraform was downloaded successfully.
             - unzip terraform_0.12.16_linux_amd64.zip
@@ -185,6 +189,7 @@ pipelines:
             - echo Tests executed successfully
       - step:
           name: Apply infrastucture on prod stage
+          image: mesosphere/aws-cli
           trigger: manual
           script:
             #
@@ -194,6 +199,7 @@ pipelines:
             - mkdir -p ~/bin
             - cd ~/bin
             - export PATH="$PATH:/root/bin"
+            - apk add --update ca-certificates openssl && update-ca-certificates
             - wget https://releases.hashicorp.com/terraform/0.12.16/terraform_0.12.16_linux_amd64.zip
             - echo Terraform was downloaded successfully.
             - unzip terraform_0.12.16_linux_amd64.zip
