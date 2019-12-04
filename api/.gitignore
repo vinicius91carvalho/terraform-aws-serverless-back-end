@@ -5,6 +5,7 @@ reports
 .scannerwork
 jspm_packages
 .nyc_output
-
+creds-cognito-example.json
+cypress/fixtures/cred-user-cognito.json
 # Serverless directories
 .serverless

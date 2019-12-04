@@ -1,9 +1,0 @@
-{
-  "ClientId": "2ar21ss64odvtc3pkbfv5kcbv8",
-  "UserPoolId": "us-east-1_gDxWdllBJ",
-  "AuthFlow": "USER_PASSWORD_AUTH",
-  "AuthParameters": {
-    "USERNAME": "vinicius91carvalho@gmail.com",
-    "PASSWORD": "a1s2d3"
-  }
-}
