@@ -78,6 +78,7 @@ O projeto irá criar 3 ambientes na cloud:
   - Após subir esse projeto devidamente configurado para o Bitbucket é necessário:
     - Configurar as variáveis(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY e AWS_DEFAULT_REGION) em Settings -> Pipelines -> Account Variables
     - Configurar a variável SONAR_TOKEN caso deseje utilizar o passo "Send SonarCloud Metrics"
+    - Configurar a variável PROJECT_NAME com o nome do projeto (Será utilizada para as URL's da aplicação)
     - Ativar a feature de Pipeline do Bitbucket (Basta acessar o repositório, clicar no item *Pipelines* no menu lateral esquerdo)
   - Alterar o arquivo cypress/fixtures/cred-user-cognito.json com as informações capturadas do Cognito
     - Criar um usuário no cognito que será utilizado para testes e inserir o username e o password neste arquivo.
@@ -117,6 +118,12 @@ Sendo que:
 - __Descrição__: Será utilizado como prefixo nos nomes dos recursos criados
 #### `domain`
 - __Descrição__: Domínio que será utilizado para hospedar as aplicações. É necessário que o domínio esteja gerênciado peo Route53.
+#### `user_cognito_email`
+- __Descrição__: E-mail do usuário que será criado no Cognito para ser utilizado nos testes integrados
+#### `user_cognito_password`
+- __Descrição__: Senha do usuário que será criado no Cognito para ser utilizado nos testes integrados
+#### `group_cognito_name`
+- __Descrição__: Nome do grupo de usuário que será criado no Cognito e em que o usuário de teste será adicionado
 
 ## Implantação
 
