@@ -30,9 +30,49 @@ resource "aws_ssm_parameter" "cognito-user-pool-arn" {
   value = aws_cognito_user_pool.pool.arn
 }
 
-/* 
-- TODO Especificar os atributos necessários para que o usuário se cadastre
-Talvez seja necessário uma tela a mais para obter essas informações do usuário e
-criar uma tabela para guardar essas informações adicionais.
-- Há a possibilidade de se disparar uma trigger com alguns eventos do Cognito.
- */
+
+/*
+  Cria o grupo de usuário
+*/
+resource "aws_cognito_user_group" "user_group" {
+  name         = var.group_name
+  user_pool_id = aws_cognito_user_pool.pool.id
+  description  = "Managed by Terraform"
+  role_arn     = aws_iam_role.group_role.arn
+}
+
+/*
+  Cria um novo usuário no Cognito
+*/
+resource "null_resource" "create_cognito_user" {
+
+  provisioner "local-exec" {
+    command = "aws cognito-idp sign-up --client-id ${aws_cognito_user_pool_client.client.id} --username ${var.user_email} --password ${var.user_password}"
+  }
+
+  depends_on = [aws_cognito_user_group.user_group]
+}
+
+/*
+  Confirma o cadastro do usuário
+*/
+resource "null_resource" "confirm_sign_up" {
+
+  provisioner "local-exec" {
+    command = "aws cognito-idp admin-confirm-sign-up --user-pool-id ${aws_cognito_user_pool.pool.id} --username ${var.user_email}"
+  }
+
+  depends_on = [null_resource.create_cognito_user]
+}
+
+/*
+  Adiciona o usuário no grupo
+*/
+resource "null_resource" "add_user_to_group" {
+
+  provisioner "local-exec" {
+    command = "aws cognito-idp admin-add-user-to-group --user-pool-id ${aws_cognito_user_pool.pool.id} --username ${var.user_email} --group-name ${aws_cognito_user_group.user_group.name}"
+  }
+
+  depends_on = [null_resource.confirm_sign_up]
+}

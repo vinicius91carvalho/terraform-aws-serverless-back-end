@@ -1,9 +1,9 @@
 {
-  "ClientId": "",
-  "UserPoolId": "",
+  "ClientId": "{ClientID}",
+  "UserPoolId": "{UserPoolID}",
   "AuthFlow": "USER_PASSWORD_AUTH",
   "AuthParameters": {
-    "USERNAME": "",
-    "PASSWORD": ""
+    "USERNAME": "auditorio_teste@sbt.com.br",
+    "PASSWORD": "Teste123"
   }
 }

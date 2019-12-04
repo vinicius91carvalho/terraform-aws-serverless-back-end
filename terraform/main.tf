@@ -23,12 +23,15 @@ terraform {
 }
 
 /*
-  Módulo da API Hello Dynamo
+  Módulo de Autenticação
 */
 module "auth" {
-  source      = "./auth"
-  environment = var.environment
-  pool_name   = "project-name-user-pool"
+  source        = "./auth"
+  environment   = var.environment
+  pool_name     = "project-name-user-pool"
+  user_email    = var.user_cognito_email
+  user_password = var.user_cognito_password
+  group_name    = var.group_cognito_name
 }
 
 
