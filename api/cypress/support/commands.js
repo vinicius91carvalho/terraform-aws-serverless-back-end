@@ -3,10 +3,13 @@
 // Comando para obter o ID Token
 Cypress.Commands.add('getToken', (user, password) => {
 
-  cy.fixture('cred-user-cognito').then((cresUserCognito) => {
+  cy.fixture('cred-user-cognito').then((credUserCognito) => {
 
-    if (user) cresUserCognito.AuthParameters.USERNAME = user;
-    if (password) cresUserCognito.AuthParameters.PASSWORD = password;
+    if (user) credUserCognito.AuthParameters.USERNAME = user;
+    if (password) credUserCognito.AuthParameters.PASSWORD = password;
+
+    if (Cypress.env('COGNITO_POOL_ID')) credUserCognito.UserPoolId = Cypress.env('COGNITO_POOL_ID');
+    if (Cypress.env('COGNITO_POOL_CLIENT_ID')) credUserCognito.ClientId = Cypress.env('COGNITO_POOL_CLIENT_ID');
 
     return cy.request({
       method: 'POST',
@@ -15,7 +18,7 @@ Cypress.Commands.add('getToken', (user, password) => {
         'Content-Type': 'application/x-amz-json-1.1',
         'X-Amz-Target': 'AWSCognitoIdentityProviderService.InitiateAuth'
       },
-      body: cresUserCognito
+      body: credUserCognito
     }).its('body.AuthenticationResult.IdToken')
       .should('not.be.empty')
       .then((token) => {

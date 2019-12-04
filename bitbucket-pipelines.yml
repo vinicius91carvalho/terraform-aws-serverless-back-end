@@ -39,7 +39,10 @@ pipelines:
             - echo Applying the template on the dev environment
             # Ensure this step passes so that the state is always pushed.
             - terraform apply -var-file=dev.tfvars -auto-approve || true
-            - terraform output
+            - terraform output > ${BITBUCKET_CLONE_DIR}/outputs
+            - cat ${BITBUCKET_CLONE_DIR}/outputs
+          artifacts:
+            - outputs
       - step:
           name: Install and Test
           image: node:10.15.0
@@ -63,15 +66,17 @@ pipelines:
             - echo "Unit tests completed on `date`"
           artifacts:
             - api/**
+            - outputs
       - step:
           name: Send SonarCloud Metrics
           script:
             - pipe: sonarsource/sonarcloud-scan:0.1.5
               variables:
                 SONAR_TOKEN: ${SONAR_TOKEN}
-                EXTRA_ARGS: -Dsonar.projectKey="project-name-back-end" -Dsonar.organization="organization" -Dsonar.sources="./" -Dsonar.host.url="https://sonarcloud.io" -Dsonar.javascript.lcov.reportPaths="coverage/lcov.info" -Dsonar.test.inclusions="api/lambda-*/**/*.spec.js" -Dsonar.inclusions="api/lambda-*/*.js"
+                EXTRA_ARGS: -Dsonar.projectKey="${PROJECT_NAME}-back-end" -Dsonar.organization="sbtlab" -Dsonar.sources="./" -Dsonar.host.url="https://sonarcloud.io" -Dsonar.javascript.lcov.reportPaths="coverage/lcov.info" -Dsonar.test.inclusions="api/lambda-*/**/*.spec.js" -Dsonar.inclusions="api/lambda-*/*.js"
           artifacts:
             - api/**
+            - outputs
       - step:
           image: mesosphere/aws-cli
           name: Deploy to dev
@@ -86,6 +91,8 @@ pipelines:
             - sls create_domain
             - echo Deploy the APIs
             - sls deploy -v -s dev
+          artifacts:
+            - outputs
       - step:
           image: cypress/base:10
           name: Run integration tests on dev
@@ -98,9 +105,12 @@ pipelines:
             - echo Installing NPM dependencies
             - npm install
             - echo Dependencies installed successfully
+            - CYPRESS_COGNITO_POOL_ID=$(awk '/user_pool_id/ {print $3}' ${BITBUCKET_CLONE_DIR}/outputs)
+            - CYPRESS_COGNITO_POOL_CLIENT_ID=$(awk '/user_pool_client_id/ {print $3}' ${BITBUCKET_CLONE_DIR}/outputs)
+            - CYPRESS_baseUrl=https://dev-api-${PROJECT_NAME}.sbtlab.io/v1
             # Run tests
             - echo Executing integration tests on dev
-            - CYPRESS_baseUrl=https://dev-api-project-name.domain/v1 npm run e2e
+            - npm run e2e
             - echo Tests executed successfully
 
     master:
@@ -135,7 +145,10 @@ pipelines:
             - echo Applying the template on the stage environment
             # Ensure this step passes so that the state is always pushed.
             - terraform apply -var-file=stage.tfvars -auto-approve || true
-            - terraform output
+            - terraform output > ${BITBUCKET_CLONE_DIR}/outputs
+            - cat ${BITBUCKET_CLONE_DIR}/outputs
+          artifacts:
+            - outputs
       - step:
           name: Install and Test
           image: node:10.15.0
@@ -159,6 +172,7 @@ pipelines:
             - echo "Unit tests completed on `date`"
           artifacts:
             - api/**
+            - outputs
       - step:
           image: mesosphere/aws-cli
           name: Deploy to stage
@@ -171,6 +185,8 @@ pipelines:
             - cd api/
             - echo Deploy the APIs
             - sls deploy -v -s stage
+          artifacts:
+            - outputs
       - step:
           image: cypress/base:10
           name: Run integration tests on staging
@@ -183,9 +199,12 @@ pipelines:
             - echo Installing NPM dependencies
             - npm install
             - echo Dependencies installed successfully
+            - CYPRESS_COGNITO_POOL_ID=$(awk '/user_pool_id/ {print $3}' ${BITBUCKET_CLONE_DIR}/outputs)
+            - CYPRESS_COGNITO_POOL_CLIENT_ID=$(awk '/user_pool_client_id/ {print $3}' ${BITBUCKET_CLONE_DIR}/outputs)
+            - CYPRESS_baseUrl=https://stage-api-${PROJECT_NAME}.sbtlab.io/v1
             # Run tests
             - echo Executing integration tests on staging
-            - CYPRESS_baseUrl=https://stage-api-project-name.domain/v1 npm run e2e
+            - npm run e2e
             - echo Tests executed successfully
       - step:
           name: Apply infrastucture on prod stage
@@ -219,7 +238,10 @@ pipelines:
             - echo Applying the template on the prod environment
             # Ensure this step passes so that the state is always pushed.
             - terraform apply -var-file=prod.tfvars -auto-approve || true
-            - terraform output
+            - terraform output > ${BITBUCKET_CLONE_DIR}/outputs
+            - cat ${BITBUCKET_CLONE_DIR}/outputs
+          artifacts:
+            - outputs
       - step:
           image: mesosphere/aws-cli
           name: Deploy to prod
@@ -239,6 +261,8 @@ pipelines:
             - echo Dependencies installed successfully
             - echo Deploy the APIs
             - sls deploy -v -s prod
+          artifacts:
+            - outputs
       - step:
           image: cypress/base:10
           name: Run integration tests on prod
@@ -251,7 +275,10 @@ pipelines:
             - echo Installing NPM dependencies
             - npm install
             - echo Dependencies installed successfully
+            - CYPRESS_COGNITO_POOL_ID=$(awk '/user_pool_id/ {print $3}' ${BITBUCKET_CLONE_DIR}/outputs)
+            - CYPRESS_COGNITO_POOL_CLIENT_ID=$(awk '/user_pool_client_id/ {print $3}' ${BITBUCKET_CLONE_DIR}/outputs)
+            - CYPRESS_baseUrl=https://prod-api-${PROJECT_NAME}.sbtlab.io/v1
             # Run tests
             - echo Executing integration tests on prod
-            - CYPRESS_baseUrl=https://prod-api-project-name.domain/v1 npm run e2e
+            - npm run e2e
             - echo Tests executed successfully
