@@ -78,7 +78,9 @@ O projeto irá criar 3 ambientes na cloud:
   - Após subir esse projeto devidamente configurado para o Bitbucket é necessário:
     - Configurar as variáveis(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY e AWS_DEFAULT_REGION) em Settings -> Pipelines -> Account Variables
     - Configurar a variável SONAR_TOKEN caso deseje utilizar o passo "Send SonarCloud Metrics"
-    - Ativar a featura de Pipeline do Bitbucket (Basta acessar o repositório, clicar no item *Pipelines* no menu lateral esquerdo)
+    - Ativar a feature de Pipeline do Bitbucket (Basta acessar o repositório, clicar no item *Pipelines* no menu lateral esquerdo)
+  - Alterar o arquivo cypress/fixtures/cred-user-cognito.json com as informações capturadas do Cognito
+    - Criar um usuário no cognito que será utilizado para testes e inserir o username e o password neste arquivo.
 
 [9]: https://learn.hashicorp.com/terraform/getting-started/install.html
 [10]: https://www.npmjs.com/get-npm
